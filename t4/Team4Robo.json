@@ -2,10 +2,10 @@
   "name": "Team 4's Robot",
   "version": "1.0",
   "authors": [
-    "Mathew Nelson",
-    "Flemming N. Larsen"
+    "박수진",
+    "정세현"
   ],
-  "description": "Based on samplebot.",
+  "description": "Based on many of the samplebots.",
   "homepage": "",
   "countryCodes": [
     "us",

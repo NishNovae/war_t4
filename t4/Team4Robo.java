@@ -1,18 +1,10 @@
 import dev.robocode.tankroyale.botapi.*;
 import dev.robocode.tankroyale.botapi.events.*;
 
-import java.util.Random;
-
-// ------------------------------------------------------------------
-// Team4Robo
-// ------------------------------------------------------------------
-// A sample bot original made for Robocode by Mathew Nelson.
-// Ported to Robocode Tank Royale by Flemming N. Larsen.
-//
-// Probably the first bot you will learn about.
-// Moves in a seesaw motion, and spins the gun around at each end.
-// ------------------------------------------------------------------
+// based on RamFire.
 public class Team4Robo extends Bot {
+
+    int turnDirection = 1; // clockwise (-1) or counterclockwise (1)
 
     // The main method starts our bot
     public static void main(String[] args) {
@@ -27,28 +19,57 @@ public class Team4Robo extends Bot {
     // Called when a new round is started -> initialize and do some movement
     @Override
     public void run() {
-        // Repeat while the bot is running
+        // Set colors
+        setBodyColor(Color.fromHex("999"));   // lighter gray
+        setTurretColor(Color.fromHex("888")); // gray
+        setRadarColor(Color.fromHex("666"));  // dark gray
+
         while (isRunning()) {
-            forward(100);
-            turnGunRight(360);
-            back(100);
-            turnGunRight(360);
+            turnLeft(5 * turnDirection);
         }
     }
 
-    // We saw another bot -> fire!
+    // We scanned another bot -> go ram it
     @Override
     public void onScannedBot(ScannedBotEvent e) {
-        fire(1);
+        turnToFaceTarget(e.getX(), e.getY());
+
+        var distance = distanceTo(e.getX(), e.getY());
+        forward(distance + 5);
+
+        rescan(); // Might want to move forward again!
     }
 
-    // We were hit by a bullet -> turn perpendicular to the bullet
+    // We have hit another bot -> turn to face bot, fire hard, and ram it again!
     @Override
-    public void onHitByBullet(HitByBulletEvent e) {
-        // Calculate the bearing to the direction of the bullet
-        var bearing = calcBearing(e.getBullet().getDirection());
+    public void onHitBot(HitBotEvent e) {
+        turnToFaceTarget(e.getX(), e.getY());
 
-        // Turn 90 degrees to the bullet direction based on the bearing
-        turnLeft(90 - bearing);
+        // Determine a shot that won't kill the bot...
+        // We want to ram him instead for bonus points
+        if (e.getEnergy() > 16) {
+            fire(3);
+        } else if (e.getEnergy() > 10) {
+            fire(2);
+        } else if (e.getEnergy() > 4) {
+            fire(1);
+        } else if (e.getEnergy() > 2) {
+            fire(.5);
+        } else if (e.getEnergy() > .4) {
+            fire(.1);
+        }
+        forward(40); // Ram him again!
+    }
+
+    // Method that turns the bot to face the target at coordinate x,y, but also sets the
+    // default turn direction used if no bot is being scanned within in the run() method.
+    private void turnToFaceTarget(double x, double y) {
+        var bearing = bearingTo(x, y);
+        if (bearing >= 0) {
+            turnDirection = 1;
+        } else {
+            turnDirection = -1;
+        }
+        turnLeft(bearing);
     }
 }
